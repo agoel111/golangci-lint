@@ -13,11 +13,13 @@ import (
 type MetaLinter struct {
 	linters              []*Linter
 	analyzerToLinterName map[*analysis.Analyzer]string
+	analyzerToLinterDesc map[*analysis.Analyzer]string
 }
 
 func NewMetaLinter(linters []*Linter) *MetaLinter {
 	ml := &MetaLinter{linters: linters}
 	ml.analyzerToLinterName = ml.getAnalyzerToLinterNameMapping()
+	ml.analyzerToLinterDesc = ml.getAnalyzerToLinterDescMapping()
 	return ml
 }
 
@@ -79,6 +81,10 @@ func (ml MetaLinter) getLinterNameForDiagnostic(diag *Diagnostic) string {
 	return ml.analyzerToLinterName[diag.Analyzer]
 }
 
+func (ml MetaLinter) getLinterDescForDiagnostic(diag *Diagnostic) string {
+	return ml.analyzerToLinterDesc[diag.Analyzer]
+}
+
 func (ml MetaLinter) getAnalyzerToLinterNameMapping() map[*analysis.Analyzer]string {
 	analyzerToLinterName := map[*analysis.Analyzer]string{}
 	for _, l := range ml.linters {
@@ -87,4 +93,14 @@ func (ml MetaLinter) getAnalyzerToLinterNameMapping() map[*analysis.Analyzer]str
 		}
 	}
 	return analyzerToLinterName
+}
+
+func (ml MetaLinter) getAnalyzerToLinterDescMapping() map[*analysis.Analyzer]string {
+	analyzerToLinterDesc := map[*analysis.Analyzer]string{}
+	for _, l := range ml.linters {
+		for _, a := range l.analyzers {
+			analyzerToLinterDesc[a] = l.Name()
+		}
+	}
+	return analyzerToLinterDesc
 }

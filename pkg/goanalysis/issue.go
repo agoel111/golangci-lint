@@ -22,6 +22,7 @@ func NewIssue(issue *result.Issue, pass *analysis.Pass) Issue {
 
 type EncodingIssue struct {
 	FromLinter           string
+	Doc                  string
 	Text                 string
 	Severity             string
 	Pos                  token.Position

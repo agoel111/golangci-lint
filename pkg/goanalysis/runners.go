@@ -23,6 +23,7 @@ import (
 type runAnalyzersConfig interface {
 	getName() string
 	getLinterNameForDiagnostic(*Diagnostic) string
+	getLinterDescForDiagnostic(*Diagnostic) string
 	getAnalyzers() []*analysis.Analyzer
 	useOriginalPackages() bool
 	reportIssues(*linter.Context) []Issue
@@ -71,7 +72,7 @@ func runAnalyzers(cfg runAnalyzersConfig, lintCtx *linter.Context) ([]result.Iss
 			}
 			retIssues = append(retIssues, *issue)
 		}
-		retIssues = append(retIssues, buildIssues(diags, cfg.getLinterNameForDiagnostic)...)
+		retIssues = append(retIssues, buildIssues(diags, cfg.getLinterNameForDiagnostic, cfg.getLinterDescForDiagnostic)...)
 		return retIssues
 	}
 
@@ -86,11 +87,12 @@ func runAnalyzers(cfg runAnalyzersConfig, lintCtx *linter.Context) ([]result.Iss
 	return issues, nil
 }
 
-func buildIssues(diags []Diagnostic, linterNameBuilder func(diag *Diagnostic) string) []result.Issue {
+func buildIssues(diags []Diagnostic, linterNameBuilder func(diag *Diagnostic) string, linterDescBuilder func(diag *Diagnostic) string) []result.Issue {
 	var issues []result.Issue
 	for i := range diags {
 		diag := &diags[i]
 		linterName := linterNameBuilder(diag)
+		linterDesc := linterDescBuilder(diag)
 
 		var text string
 		if diag.Analyzer.Name == linterName {
@@ -98,9 +100,14 @@ func buildIssues(diags []Diagnostic, linterNameBuilder func(diag *Diagnostic) st
 		} else {
 			text = fmt.Sprintf("%s: %s", diag.Analyzer.Name, diag.Message)
 		}
-
+		// Decide on the Doc field based on whether diag.Analyzer.Doc is empty
+		doc := diag.Analyzer.Doc
+		if doc == "" {
+			doc = linterDesc
+		}
 		issues = append(issues, result.Issue{
 			FromLinter: linterName,
+			Doc:        doc,
 			Text:       text,
 			Pos:        diag.Position,
 			Pkg:        diag.Pkg,
@@ -110,6 +117,7 @@ func buildIssues(diags []Diagnostic, linterNameBuilder func(diag *Diagnostic) st
 			for _, info := range diag.Related {
 				issues = append(issues, result.Issue{
 					FromLinter: linterName,
+					Doc:        doc,
 					Text:       fmt.Sprintf("%s(related information): %s", diag.Analyzer.Name, info.Message),
 					Pos:        diag.Pkg.Fset.Position(info.Pos),
 					Pkg:        diag.Pkg,
@@ -152,6 +160,7 @@ func saveIssuesToCache(allPkgs []*packages.Package, pkgsFromCache map[*packages.
 					i := &pkgIssues[ind]
 					encodedIssues = append(encodedIssues, EncodingIssue{
 						FromLinter:           i.FromLinter,
+						Doc:                  i.Doc,
 						Text:                 i.Text,
 						Severity:             i.Severity,
 						Pos:                  i.Pos,
@@ -225,6 +234,7 @@ func loadIssuesFromCache(pkgs []*packages.Package, lintCtx *linter.Context,
 					issue := &pkgIssues[i]
 					issues = append(issues, result.Issue{
 						FromLinter:           issue.FromLinter,
+						Doc:                  issue.Doc,
 						Text:                 issue.Text,
 						Severity:             issue.Severity,
 						Pos:                  issue.Pos,

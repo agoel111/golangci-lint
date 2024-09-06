@@ -73,6 +73,7 @@ func runUnused(pass *analysis.Pass, cfg *config.UnusedSettings) []goanalysis.Iss
 
 		issue := goanalysis.NewIssue(&result.Issue{
 			FromLinter: linterName,
+			Doc:        "Checks Go code for unused constants, variables, functions and types",
 			Text:       fmt.Sprintf("%s %s is unused", object.Kind, object.Name),
 			Pos:        object.Position,
 		}, pass)

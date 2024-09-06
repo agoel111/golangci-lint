@@ -52,6 +52,8 @@ type Linter struct {
 }
 
 func NewLinter(name, desc string, analyzers []*analysis.Analyzer, cfg map[string]map[string]any) *Linter {
+	// fmt.Println(name)
+	// fmt.Println(desc)
 	return &Linter{name: name, desc: desc, analyzers: analyzers, cfg: cfg}
 }
 
@@ -166,6 +168,10 @@ func (lnt *Linter) getName() string {
 
 func (lnt *Linter) getLinterNameForDiagnostic(*Diagnostic) string {
 	return lnt.name
+}
+
+func (lnt *Linter) getLinterDescForDiagnostic(*Diagnostic) string {
+	return lnt.desc
 }
 
 func (lnt *Linter) getAnalyzers() []*analysis.Analyzer {

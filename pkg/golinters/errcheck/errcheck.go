@@ -101,6 +101,8 @@ func runErrCheck(lintCtx *linter.Context, pass *analysis.Pass, checker *errcheck
 		issues[i] = goanalysis.NewIssue(
 			&result.Issue{
 				FromLinter: linterName,
+				Doc:        "errcheck is a program for checking for unchecked errors in Go code. "+
+			"These unchecked errors can be critical bugs in some cases",
 				Text:       text,
 				Pos:        err.Pos,
 			},
